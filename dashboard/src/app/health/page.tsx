@@ -46,7 +46,7 @@ export default async function HealthPage() {
         <ColumnChart data={chrono.map((r) => ({ x: `#${r.run_id}`, y: r.duration_s ?? 0 }))} format="int" label="seconds"
           details={chrono.map((r) => `${r.status}, ${int(r.rows_inserted ?? 0)} rows inserted, ${ts(r.started_at)} ET`)} />
       </Card>
-      <Card title="Event to mart latency per run" sub="Median seconds from an order's event time to its row being published in fct_orders, for orders loaded in that run">
+      <Card title="Event to mart latency per run" sub="Median seconds from each event's timestamp to the commit of the dbt build that published it, over the events loaded in that run">
         <ColumnChart data={chrono.filter((r) => r.latency_p50_s != null).map((r) => ({ x: `#${r.run_id}`, y: r.latency_p50_s ?? 0 }))} format="int" label="seconds (p50)"
           details={chrono.filter((r) => r.latency_p50_s != null).map((r) => `p95 ${dur(r.latency_p95_s)}, ${int(r.orders_published ?? 0)} orders`)} />
       </Card>

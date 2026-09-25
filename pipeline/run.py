@@ -121,6 +121,7 @@ def main(argv=None) -> int:
             fields.update(rows_inserted=res.rows_inserted, duplicates_dropped=res.duplicates_dropped)
             with timer("dbt_build"):
                 rc = dbt("build")
+            marts_ready_at = datetime.now(timezone.utc)  # every mart table rebuilt and committed
             rr = json.loads((DBT_DIR / "target" / "run_results.json").read_text())
             nodes = [r for r in rr["results"] if not r["unique_id"].startswith("test.")]
             fields["dbt_nodes_ok"] = sum(r["status"] == "success" for r in nodes)
@@ -133,17 +134,20 @@ def main(argv=None) -> int:
                 checks += quality.mart_checks(conn)
                 checks += quality.reconciliation_checks(conn, res.batch_id)
 
+            # End-to-end latency: event time -> the moment the marts containing it were committed,
+            # over every event loaded in this run (late arrivals included, as they really are late).
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    select count(*),
-                           percentile_cont(0.5) within group (order by extract(epoch from _published_at - order_time)),
-                           percentile_cont(0.95) within group (order by extract(epoch from _published_at - order_time))
-                    from ecom_marts.fct_orders where _source_loaded_at >= %s
+                    select percentile_cont(0.5) within group (order by extract(epoch from %(ready)s - event_time)),
+                           percentile_cont(0.95) within group (order by extract(epoch from %(ready)s - event_time))
+                    from ecom_raw.events where batch_id = %(b)s and event_time <= %(ready)s
                     """,
-                    (started_at,),
+                    {"ready": marts_ready_at, "b": res.batch_id},
                 )
-                n, p50, p95 = cur.fetchone()
+                p50, p95 = cur.fetchone()
+                cur.execute("select count(*) from ecom_marts.fct_orders where _source_loaded_at >= %s", (started_at,))
+                n = cur.fetchone()[0]
             fields.update(orders_published=n, latency_p50_s=p50, latency_p95_s=p95)
 
             with timer("retention"):
