@@ -160,7 +160,7 @@ def main(argv=None) -> int:
             elif failed:
                 status = "warning"
         try:
-            quality.persist(conn, run_id, checks)
+            # Ground truth first and in its own commit, so it survives a failure further down.
             if batch is not None and batch.anomaly:
                 detected, hits = quality.score_anomaly(batch.anomaly, checks)
                 with conn.cursor() as cur:
@@ -170,6 +170,8 @@ def main(argv=None) -> int:
                         (run_id, ingest.batch_id_for(batch.window_end), batch.anomaly["anomaly_type"],
                          batch.anomaly["rows_affected"], detected, hits),
                     )
+                conn.commit()
+            quality.persist(conn, run_id, checks)
             fields["ecom_bytes"] = db.ecom_bytes(conn)
         except Exception as exc:
             conn.rollback()

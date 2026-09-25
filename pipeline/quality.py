@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -48,6 +49,21 @@ DETECTORS = {
 }
 
 
+def _jsonable(v):
+    """JSON-safe copy: NaN/inf (pandas nulls in GX samples) become null, unknown types become str."""
+    if isinstance(v, dict):
+        return {str(k): _jsonable(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [_jsonable(x) for x in v]
+    if isinstance(v, float):
+        return v if math.isfinite(v) else None
+    if v is None or isinstance(v, (str, int, bool)):
+        return v
+    if hasattr(v, "item"):
+        return _jsonable(v.item())
+    return str(v)
+
+
 @dataclass
 class Check:
     suite: str
@@ -74,7 +90,7 @@ class _GX:
         obs = {k: v for k, v in (r.result or {}).items() if k in keep}
         if r.exception_info and r.exception_info.get("raised_exception"):
             obs["exception"] = str(r.exception_info.get("exception_message"))[:300]
-        return bool(r.success), json.loads(json.dumps(obs, default=str))
+        return bool(r.success), _jsonable(obs)
 
 
 def raw_batch_checks(df: pd.DataFrame, expected_rows: float | None) -> list[Check]:
@@ -250,7 +266,7 @@ def persist(conn, run_id: int, checks: list[Check]) -> None:
         cur.executemany(
             "insert into ecom_ops.quality_results (run_id, suite, check_name, severity, success, observed) "
             "values (%s, %s, %s, %s, %s, %s)",
-            [(run_id, c.suite, c.name, c.severity, c.success, json.dumps(c.observed, default=str)) for c in checks],
+            [(run_id, c.suite, c.name, c.severity, c.success, json.dumps(_jsonable(c.observed))) for c in checks],
         )
     conn.commit()
 

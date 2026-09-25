@@ -31,3 +31,12 @@ def test_anomaly_is_detected(kind):
         pytest.xfail("x100 of a small basket can stay under the range limit")
     assert detected, f"{kind} not caught; failed={[c.name for c in checks if not c.success]}"
     assert set(hits) <= raw_detectors | quality.DETECTORS[kind]
+
+
+def test_observations_are_json_safe():
+    """A null burst puts NaN into GX's unexpected-value samples; persisted JSON must not contain it."""
+    import json
+
+    b = generator.inject_anomaly(generator.generate_window(T0, T0 + timedelta(hours=2)), force="null_burst")
+    for c in quality.raw_batch_checks(frame(b), expected_rows=None):
+        json.loads(json.dumps(quality._jsonable(c.observed), allow_nan=False))
