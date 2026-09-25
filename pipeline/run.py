@@ -69,7 +69,7 @@ class Timer:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--until", help="window end (ISO, UTC); defaults to now")
-    ap.add_argument("--trigger", default=os.environ.get("ECOM_TRIGGER", "manual"))
+    ap.add_argument("--trigger", default=os.environ.get("ECOM_TRIGGER", "local"))
     ap.add_argument("--force-anomaly", choices=generator.ANOMALY_TYPES)
     ap.add_argument("--no-anomalies", action="store_true")
     args = ap.parse_args(argv)
