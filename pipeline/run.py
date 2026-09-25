@@ -111,13 +111,14 @@ def main(argv=None) -> int:
             with timer("quality_raw"):
                 baseline = quality.volume_baseline(conn, window_start, window_end)
                 checks += quality.raw_batch_checks(ingest.read_events(batch_dir), baseline)
-            with timer("load"):
-                res = ingest.load(conn, batch_dir)
-            fields.update(rows_inserted=res.rows_inserted, duplicates_dropped=res.duplicates_dropped)
-
+            # Freshness is measured before this run's load, so it reports how stale the warehouse
+            # got while waiting for the scheduler, not the few seconds since our own insert.
             with timer("dbt_freshness"):
                 dbt("source", "freshness")
                 checks += quality.freshness_check(DBT_DIR / "target")
+            with timer("load"):
+                res = ingest.load(conn, batch_dir)
+            fields.update(rows_inserted=res.rows_inserted, duplicates_dropped=res.duplicates_dropped)
             with timer("dbt_build"):
                 rc = dbt("build")
             rr = json.loads((DBT_DIR / "target" / "run_results.json").read_text())

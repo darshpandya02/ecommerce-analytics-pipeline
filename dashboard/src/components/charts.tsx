@@ -88,7 +88,7 @@ export function LineChart({
   const fmt = FORMATS[format];
   const [ref, w] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
-  const max = niceMax(Math.max(1, ...data.flatMap((d) => series.map((s) => Number(d[s.key]) || 0))));
+  const max = niceMax(Math.max(1e-9, ...data.flatMap((d) => series.map((s) => Number(d[s.key]) || 0))));
   const iw = w - M.left - M.right;
   const ih = height - M.top - M.bottom;
   const x = (i: number) => M.left + (data.length <= 1 ? iw / 2 : (i / (data.length - 1)) * iw);
@@ -182,7 +182,7 @@ export function ColumnChart({
   const fmt = FORMATS[format];
   const [ref, w] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
-  const max = niceMax(Math.max(1, ...data.map((d) => d.y)));
+  const max = niceMax(Math.max(1e-9, ...data.map((d) => d.y)));
   const iw = w - M.left - M.right;
   const ih = height - M.top - M.bottom;
   const band = iw / Math.max(1, data.length);

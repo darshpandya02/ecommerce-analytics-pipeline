@@ -198,8 +198,8 @@ export type FalsePositive = { clean_runs: number; clean_runs_with_failures: numb
 
 export async function falsePositives() {
   const rows = await q<FalsePositive>`
-    select count(*)::int as clean_runs, count(*) filter (where checks_failed > 0)::int as clean_runs_with_failures
+    select count(*)::int as clean_runs, count(*) filter (where exists (select 1 from ecom_ops.quality_results q where q.run_id = r.run_id and not q.success and q.suite <> 'dbt_freshness'))::int as clean_runs_with_failures
     from ecom_ops.pipeline_runs r
-    where status <> 'running' and not exists (select 1 from ecom_ops.injected_anomalies a where a.run_id = r.run_id)`;
+    where status <> 'running' and github_run_id is not null and not exists (select 1 from ecom_ops.injected_anomalies a where a.run_id = r.run_id)`;
   return rows[0];
 }

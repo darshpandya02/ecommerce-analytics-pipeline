@@ -40,7 +40,7 @@ export default async function HealthPage() {
         <Tile label="Run duration p50 / p95" value={`${dur(h.p50_duration_s)} / ${dur(h.p95_duration_s)}`} sub={`${int(h.scheduled_runs)} scheduler runs`} />
         <Tile label="Event to mart latency" value={`${dur(h.p50_latency_s)}`} sub={`median of per-run p50; p95 ${dur(h.p95_latency_s)}`} />
         <Tile label="Warehouse size" value={`${mb.toFixed(1)} MB`} sub="ecom_* schemas, budget 150 MB" />
-        <Tile label="Injected anomalies caught" value={scored.length ? `${caught} / ${scored.length}` : "none yet"} sub={`clean runs with a failed check: ${fp.clean_runs_with_failures} / ${fp.clean_runs}`} />
+        <Tile label="Injected anomalies caught" value={scored.length ? `${caught} / ${scored.length}` : "none yet"} sub={`runs without injection that failed a data check: ${fp.clean_runs_with_failures} / ${fp.clean_runs}`} />
       </div>
       <Card title="Run duration" sub="Pipeline process time per run (bootstrap through retention), oldest to newest">
         <ColumnChart data={chrono.map((r) => ({ x: `#${r.run_id}`, y: r.duration_s ?? 0 }))} format="int" label="seconds"

@@ -7,7 +7,7 @@ sources:
     loaded_at_field: loaded_at
     config:
       freshness:
-        warn_after: {count: 45, period: minute}
+        warn_after: {count: 60, period: minute}
         error_after: {count: 180, period: minute}
     tables:
       - name: events
