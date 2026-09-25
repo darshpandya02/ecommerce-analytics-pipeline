@@ -1,0 +1,30 @@
+name: ecom
+version: "1.0.0"
+profile: ecom
+config-version: 2
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages", "logs"]
+
+flags:
+  send_anonymous_usage_stats: false
+
+models:
+  ecom:
+    staging:
+      +schema: ecom_staging
+      +materialized: view
+    intermediate:
+      +schema: ecom_staging
+      +materialized: view
+    marts:
+      +schema: ecom_marts
+      +materialized: table
+
+data_tests:
+  ecom:
+    +severity: warn
+    +store_failures: false

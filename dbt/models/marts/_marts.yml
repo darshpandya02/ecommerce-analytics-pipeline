@@ -1,0 +1,84 @@
+version: 2
+
+models:
+  - name: fct_orders
+    description: One row per order. Incremental merge keyed by order_id.
+    columns:
+      - name: order_id
+        data_tests:
+          - unique: {config: {severity: error}}
+          - not_null: {config: {severity: error}}
+      - name: amount
+        data_tests: [not_null]
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+      - name: currency
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [USD]
+      - name: device
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [mobile, desktop, tablet]
+  - name: fct_refunds
+    columns:
+      - name: refund_event_id
+        data_tests:
+          - unique: {config: {severity: error}}
+          - not_null: {config: {severity: error}}
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fct_orders')
+                field: order_id
+      - name: reason
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [damaged, wrong_size, not_as_described, changed_mind, late_delivery]
+  - name: dim_customers
+    columns:
+      - name: customer_id
+        data_tests:
+          - unique: {config: {severity: error}}
+          - not_null: {config: {severity: error}}
+  - name: dim_products
+    columns:
+      - name: product_id
+        data_tests:
+          - unique: {config: {severity: error}}
+          - not_null: {config: {severity: error}}
+  - name: mart_daily_revenue
+    columns:
+      - name: day
+        data_tests:
+          - unique: {config: {severity: error}}
+          - not_null: {config: {severity: error}}
+  - name: mart_conversion_funnel
+    data_tests:
+      - funnel_is_monotonic
+  - name: mart_cohort_retention
+    columns:
+      - name: retention_rate
+        data_tests: [not_null]
+  - name: mart_top_products
+    columns:
+      - name: product_id
+        data_tests:
+          - unique: {config: {severity: error}}
+  - name: mart_refund_rate
+    columns:
+      - name: category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [All, Electronics, Home, Apparel, Beauty, Sports, Books]

@@ -1,0 +1,16 @@
+# Connection comes from the environment; pipeline/run.py derives these from ECOM_DATABASE_URL.
+ecom:
+  target: prod
+  outputs:
+    prod:
+      type: postgres
+      host: "{{ env_var('ECOM_PGHOST') }}"
+      port: "{{ env_var('ECOM_PGPORT', '5432') | int }}"
+      user: "{{ env_var('ECOM_PGUSER') }}"
+      password: "{{ env_var('ECOM_PGPASSWORD') }}"
+      dbname: "{{ env_var('ECOM_PGDATABASE') }}"
+      schema: ecom_staging
+      threads: 4
+      sslmode: require
+      connect_timeout: 30
+      retries: 2

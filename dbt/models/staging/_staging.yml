@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: stg_events
+    columns:
+      - name: event_id
+        data_tests:
+          - unique: {config: {severity: error}}
+          - not_null: {config: {severity: error}}
+      - name: event_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [session_start, page_view, product_view, add_to_cart, checkout_started, order_placed, refund_issued]
+      - name: session_id
+        data_tests: [not_null]
+      - name: device
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [mobile, desktop, tablet]
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        data_tests:
+          - unique: {config: {severity: error}}
+          - not_null: {config: {severity: error}}
+  - name: stg_products
+    columns:
+      - name: product_id
+        data_tests:
+          - unique: {config: {severity: error}}
+          - not_null: {config: {severity: error}}
+      - name: category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [Electronics, Home, Apparel, Beauty, Sports, Books]

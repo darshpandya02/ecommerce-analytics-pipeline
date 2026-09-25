@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: int_sessions
+    columns:
+      - name: session_id
+        data_tests:
+          - unique: {config: {severity: error}}
+          - not_null: {config: {severity: error}}
+  - name: int_order_items
+    columns:
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id

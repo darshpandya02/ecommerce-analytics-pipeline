@@ -1,0 +1,23 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: ecom_raw
+    description: Raw zone mirror loaded from Parquet micro-batches by pipeline/ingest.py.
+    loaded_at_field: loaded_at
+    config:
+      freshness:
+        warn_after: {count: 45, period: minute}
+        error_after: {count: 180, period: minute}
+    tables:
+      - name: events
+        description: One row per distinct event_id; the source record lives in payload.
+        columns:
+          - name: event_id
+            data_tests: [unique, not_null]
+      - name: customers
+        config:
+          freshness: null
+      - name: products
+        config:
+          freshness: null
